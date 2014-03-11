@@ -1,4 +1,6 @@
 use Bio::Chado::Schema;
+use strict;
+use warnings;
 
 my $dsn = "dbi:Pg:dbname=" . $ARGV[0] . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
@@ -8,7 +10,7 @@ my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 
 my $results = $chado->resultset('Sequence::Feature')->search(
 	{
-		organism_id =>341, 
+		#organism_id =>341, 
 	}
 	);
 
@@ -18,7 +20,7 @@ while(my $row = $results->next){
 }
 
 my %results;
-foreach $k (keys(%cv_terms)){
+foreach my $k (keys(%cv_terms)){
 	$results = $chado->resultset('Cv::Cvterm')->search({
 		cvterm_id => $k
 	});
@@ -27,7 +29,7 @@ foreach $k (keys(%cv_terms)){
 	}
 }
 
-foreach $k (sort {$results{$a} <=> $results{$b}} (keys %results)){
+foreach my $k (sort {$results{$a} <=> $results{$b}} (keys %results)){
 	printf("%s %-10s\n", $k, $results{$k});
 }
 
