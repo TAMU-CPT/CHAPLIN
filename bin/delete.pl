@@ -1,4 +1,7 @@
 use Bio::Chado::Schema;
+use Data::Format::Pretty::Console qw(format_pretty);
+use strict;
+use warnings;
 
 my $dsn = "dbi:Pg:dbname=" . $ARGV[0] . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";

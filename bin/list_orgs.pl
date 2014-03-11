@@ -1,4 +1,7 @@
 use Bio::Chado::Schema;
+use Data::Format::Pretty::Console qw(format_pretty);
+use strict;
+use warnings;
 
 my $dsn = "dbi:Pg:dbname=" . $ARGV[0] . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
@@ -9,8 +12,12 @@ my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 my $results = $chado->resultset('Organism::Organism')->search(
 );
 
+my @data = (
+	['ID', 'Genus', 'Species', 'Common Name'],
+);
+
 while(my $row = $results->next){
-	print join("\t", $row->id, $row->genus, $row->species, $row->common_name),"\n";
-		
+	push(@data, [$row->id, $row->genus, $row->species, $row->common_name]);
 }
+print format_pretty(\@data);
 

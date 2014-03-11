@@ -1,4 +1,5 @@
 use Bio::Chado::Schema;
+use Data::Format::Pretty::Console qw(format_pretty);
 use strict;
 use warnings;
 
@@ -29,7 +30,4 @@ foreach my $k (keys(%cv_terms)){
 	}
 }
 
-foreach my $k (sort {$results{$a} <=> $results{$b}} (keys %results)){
-	printf("%s %-10s\n", $k, $results{$k});
-}
-
+print format_pretty(\%results);
