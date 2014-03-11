@@ -48,6 +48,7 @@ while(my $row = $results->next){
 				$seq = substr($subhit->seq(),$left,($right-$left));
 			}
 			$seq = $codon_table->translate($seq);
+			$seq =~ s/\*$//g;
 			push(@data,
 				{
 					organsim      => $row->feature->organism->common_name,
@@ -65,7 +66,7 @@ while(my $row = $results->next){
 			my $tag =  $row->feature->organism->common_name . "_" . $ARGV[1];
 			$tag =~ s/[^A-Za-z0-9_:.-]*//g;
 			push(@fasta_sequences,
-				sprintf(">%s [id=%s;length=%s;strand=%s;left=%s;right=%s]\n%s", $tag, $row->feature->uniquename,length($seq),$strand,$left,$right,$seq));
+				sprintf(">%s [id=%s;length=%s;strand=%s;left=%s;right=%s;query=%s]\n%s", $tag, $row->feature->uniquename,length($seq),$strand,$left,$right,$seq,$row->value));
 		}
 	}
 }
