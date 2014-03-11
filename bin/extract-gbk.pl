@@ -3,29 +3,62 @@ use Data::Format::Pretty::Console qw(format_pretty);
 use strict;
 use warnings;
 
-my $dsn = "dbi:Pg:dbname=" . $ARGV[0] . ";host=cpt.tamu.edu;port=5432;sslmode=require";
+
+use CPT;
+my $libCPT = CPT->new();
+my $options = $libCPT->getOptions(
+	'options' => [
+		[
+			'database',
+			'Database Name',
+			{
+				required => 1,
+				validate => 'String'
+			}
+		],
+		[
+			'cn',
+			'Organism Common Name',
+			{
+				required => 1,
+				validate => 'String'
+			}
+		],
+	],
+	'outputs' => [
+	],
+	'defaults' => [
+		'appid'   => 'CHAPLIN_extract_gbk',
+		'appname' => 'Extract Genbank',
+		'appdesc' => 'converts chado database entry to genbank file',
+	]
+);
+
+
+
+my $dsn = "dbi:Pg:dbname=" . $options->{database} . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
 my $password = "oNFkI0KyoGygRp8Zf7jOVIrR1VmsOWak";
 my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 
 my $results = $chado->resultset('Organism::Organism')->search(
-	{ common_name => { -like => $ARGV[1] } },
+	{ common_name => { -like => $options->{cn} } },
 );
 
 my @organism_ids;
+my @found_orgs;
 while(my $row = $results->next){
 	push(@organism_ids, $row->id);
-	print "Found Organism: " , $row->common_name , "\n";
+	push(@found_orgs,$row->common_name);
 }
 
 if(scalar @organism_ids > 1 || scalar @organism_ids == 0){
-	die 'Please refine your search query so as to only select one organism';
+	die 'Please refine your search query so as to only select one organism. Found: [' . join(",", @found_orgs) . ']';
 }
 
 
 my $features = $chado->resultset('Sequence::Feature')->search(
 	{ organism_id => $organism_ids[0] },
-	#{ join => ['featureloc_features', 'featureprops'] }
 );
 
 
@@ -120,10 +153,9 @@ foreach(@features){
 	$seq_obj->add_SeqFeature($new_feat)
 }
 
-open(my $outfile,'>', $ARGV[1].'.gbk');
-use Bio::SeqIO;
-my $outseq = Bio::SeqIO->new(
-	-fh => $outfile,
-	-format => 'Genbank',
+$libCPT->classyReturnResults(
+	name        => "out.gbk",
+	data        => $seq_obj,
+	data_format => 'genomic/annotated',
+	format_as   => 'Genbank',
 );
-$outseq->write_seq($seq_obj);
