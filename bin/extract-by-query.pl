@@ -24,9 +24,9 @@ my $options = $libCPT->getOptions(
 	'outputs' => [
 	],
 	'defaults' => [
-		'appid'   => 'CHAPLIN_count_features',
-		'appname' => 'Count Features',
-		'appdesc' => 'counts numbers of each feature type in the entire database',
+		'appid'   => 'CHAPLIN_extract_fasta',
+		'appname' => 'Extract Fasta from Query',
+		'appdesc' => 'allows exporting a query against chado as fasta.',
 	]
 );
 

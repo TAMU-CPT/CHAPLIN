@@ -32,10 +32,7 @@ my $password = "oNFkI0KyoGygRp8Zf7jOVIrR1VmsOWak";
 my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 
 
-my $results = $chado->resultset('Sequence::Feature')->search(
-	{
-	}
-	);
+my $results = $chado->resultset('Sequence::Feature')->search();
 
 my %cv_terms;
 while(my $row = $results->next){
