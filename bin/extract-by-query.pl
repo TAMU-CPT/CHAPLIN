@@ -2,19 +2,41 @@ use Bio::Chado::Schema;
 use Bio::Perl;
 use strict;
 use warnings;
-use Data::Format::Pretty::Console qw(format_pretty);
 use Bio::Tools::CodonTable;
 
 my $codon_table = Bio::Tools::CodonTable->new(-id=>11);
 
+use CPT;
+my $libCPT = CPT->new();
+my $options = $libCPT->getOptions(
+	'options' => [
+		[
+			'database',
+			'Database Name',
+			{
+				required => 1,
+				validate => 'String'
+			}
+		],
+		['query','Search string for searching through all tags in the database. Use "%" as a wildcard character, e.g., "%ISP%" will match anything with the characters ISP in it', { required => 1, validate => 'String'}],
+		['translate','Translate to amino acid sequence (uses t/n table #11)'],
+	],
+	'outputs' => [
+	],
+	'defaults' => [
+		'appid'   => 'CHAPLIN_extract_fasta',
+		'appname' => 'Extract Fasta from Query',
+		'appdesc' => 'allows exporting a query against chado as fasta.',
+	]
+);
 
-my $dsn = "dbi:Pg:dbname=" . $ARGV[0] . ";host=cpt.tamu.edu;port=5432;sslmode=require";
+my $dsn = "dbi:Pg:dbname=" . $options->{database} . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
 my $password = "oNFkI0KyoGygRp8Zf7jOVIrR1VmsOWak";
 my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 
 my $results = $chado->resultset('Sequence::Featureprop')->search(
-	{ value => { like => $ARGV[1] } },
+	{ value => { like => $options->{query} } },
 	{ join => ['cvterm', 'feature'] }
 );
 
@@ -47,7 +69,9 @@ while(my $row = $results->next){
 			}else{
 				$seq = substr($subhit->seq(),$left,($right-$left));
 			}
-			$seq = $codon_table->translate($seq);
+			if($options->{translate}){
+				$seq = $codon_table->translate($seq);
+			}
 			$seq =~ s/\*$//g;
 			push(@data,
 				{
@@ -63,15 +87,23 @@ while(my $row = $results->next){
 				}
 			);
 
-			my $tag =  $row->feature->organism->common_name . "_" . $ARGV[1];
+			my $tag =  $row->feature->organism->common_name . "_" . $options->{query};
 			$tag =~ s/[^A-Za-z0-9_:.-]*//g;
 			push(@fasta_sequences,
-				sprintf(">%s [id=%s;length=%s;strand=%s;left=%s;right=%s;query=%s]\n%s", $tag, $row->feature->uniquename,length($seq),$strand,$left,$right,$seq,$row->value));
+				sprintf(">%s [id=%s;length=%s;strand=%s;left=%s;right=%s;query=%s]\n%s", $tag, $row->feature->uniquename,length($seq),$strand,$left,$right,$row->value,$seq));
 		}
 	}
 }
-
-print format_pretty(\@data);
-open(my $output,'>', 'out.fa');
-print $output join("\n",@fasta_sequences);
-close($output);
+if($options->{verbose}){
+	use Data::Format::Pretty::Console qw(format_pretty);
+	print format_pretty(\@data);
+}
+#open(my $output,'>', 'out.fa');
+#print $output join("\n",@fasta_sequences);
+#close($output);
+$libCPT->classyReturnResults(
+	name        => "query.fa",
+	data        => join("\n", @fasta_sequences),
+	data_format => 'genomic/raw',
+	format_as   => 'Fasta',
+);
