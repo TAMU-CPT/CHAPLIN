@@ -21,6 +21,17 @@ my $options = $libCPT->getOptions(
 		 ['query','Search string for searching through all tags in the database. Use "%" as a wildcard character, e.g., "%ISP%" will match anything with the characters ISP in it', { required => 1, validate => 'String'}],
 	],
 	'outputs' => [
+		[
+			'results',
+			'Search Results',
+			{
+				validate       => 'File/Output',
+				required       => 1,
+				default        => 'search_results.csv',
+				data_format    => 'text/tabular',
+				default_format => 'CSV'
+			}
+		],
 	],
 	'defaults' => [
 		'appid'   => 'CHAPLIN_search',
@@ -39,11 +50,10 @@ my $results = $chado->resultset('Sequence::Feature')->search(
 	{ name => { -like => $options->{query} } },
 );
 
-my @headers = ('id', 'organism id', 'organism common name', 'sequence length');
-my @data = (
-);
+my @headers = ('id', 'organism id', 'organism common name');
+my @data = ();
 while(my $row = $results->next){
-	push(@data, [$row->id, $row->organism->id, $row->organism->common_name, $row->seqlen]);
+	push(@data, [$row->id, $row->organism->id, $row->organism->common_name]);
 }
 
 if($options->{verbose}){
@@ -66,8 +76,6 @@ my %crr_data = (
 	}
 );
 $libCPT->classyReturnResults(
-	name        => "search_results.csv",
+	name        => 'results',
 	data        => \%crr_data,
-	data_format => 'text/tabular',
-	format_as   => 'CSV',
 );

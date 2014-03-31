@@ -29,6 +29,17 @@ my $options = $libCPT->getOptions(
 		],
 	],
 	'outputs' => [
+		[
+			'gbk',
+			'Extracted Genomic Data',
+			{
+				validate       => 'File/Output',
+				required       => 1,
+				default        => 'extracted.gbk',
+				data_format    => 'genomic/annotated',
+				default_format => 'Genbank'
+			}
+		],
 	],
 	'defaults' => [
 		'appid'   => 'CHAPLIN_extract_gbk',
@@ -157,8 +168,6 @@ foreach(@features){
 }
 
 $libCPT->classyReturnResults(
-	name        => "out.gbk",
+	name        => "gbk",
 	data        => $seq_obj,
-	data_format => 'genomic/annotated',
-	format_as   => 'Genbank',
 );

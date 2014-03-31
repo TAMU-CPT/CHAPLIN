@@ -19,6 +19,17 @@ my $options = $libCPT->getOptions(
 		],
 	],
 	'outputs' => [
+		[
+			'results',
+			'Organism Listing',
+			{
+				validate       => 'File/Output',
+				required       => 1,
+				default        => 'orgs.csv',
+				data_format    => 'text/tabular',
+				default_format => 'CSV'
+			}
+		],
 	],
 	'defaults' => [
 		'appid'   => 'CHAPLIN_list_organisms',
@@ -50,9 +61,7 @@ my %crr_data = (
 	}
 );
 $libCPT->classyReturnResults(
-	name        => "organism_list.csv",
+	name        => "results",
 	data        => \%crr_data,
-	data_format => 'text/tabular',
-	format_as   => 'CSV',
 );
 

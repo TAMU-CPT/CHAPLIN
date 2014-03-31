@@ -18,6 +18,17 @@ my $options = $libCPT->getOptions(
 		],
 	],
 	'outputs' => [
+		[
+			'results',
+			'Feature Counts',
+			{
+				validate       => 'File/Output',
+				required       => 1,
+				default        => 'feature_counts.csv',
+				data_format    => 'text/tabular',
+				default_format => 'CSV'
+			}
+		],
 	],
 	'defaults' => [
 		'appid'   => 'CHAPLIN_count_features',
@@ -67,9 +78,7 @@ my %crr_data = (
 	}
 );
 $libCPT->classyReturnResults(
-	name        => "feature_count.csv",
+	name        => "results",
 	data        => \%crr_data,
-	data_format => 'text/tabular',
-	format_as   => 'CSV',
 );
 

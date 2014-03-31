@@ -24,6 +24,17 @@ my $options = $libCPT->getOptions(
 		['translate','Translate to amino acid sequence (uses t/n table #11)'],
 	],
 	'outputs' => [
+		[
+			'sequence',
+			'Extracted Features',
+			{
+				validate       => 'File/Output',
+				required       => 1,
+				default        => 'query.fa',
+				data_format    => 'genomic/raw',
+				default_format => 'Fasta'
+			}
+		],
 	],
 	'defaults' => [
 		'appid'   => 'CHAPLIN_extract_fasta',
@@ -104,8 +115,6 @@ if($options->{verbose}){
 #print $output join("\n",@fasta_sequences);
 #close($output);
 $libCPT->classyReturnResults(
-	name        => "query.fa",
+	name        => "sequence",
 	data        => join("\n", @fasta_sequences),
-	data_format => 'genomic/raw',
-	format_as   => 'Fasta',
 );

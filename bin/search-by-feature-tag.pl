@@ -2,17 +2,55 @@ use Bio::Chado::Schema;
 use strict;
 use warnings;
 use Data::Format::Pretty::Console qw(format_pretty);
-
-
 # PODNAME: search-by-feature-tag.pl
+use CPT;
+my $libCPT = CPT->new();
+my $options = $libCPT->getOptions(
+	'options' => [
+		[
+			'database',
+			'Database Name',
+			{
+				required => 1,
+				validate => 'String'
+			}
+		],
+		[
+			'query',
+			'Query String (% is wildcard character)',
+			{
+				required => 1,
+				validate => 'String'
+			}
+		],
+	],
+	'outputs' => [
+		[
+			'results',
+			'Search Results',
+			{
+				validate       => 'File/Output',
+				required       => 1,
+				default        => 'orgs.csv',
+				data_format    => 'text/tabular',
+				default_format => 'CSV'
+			}
+		],
+	],
+	'defaults' => [
+		'appid'   => 'CHAPLIN_search_by_feature_tag',
+		'appname' => 'Search by Feature Tag',
+		'appdesc' => 'lists features in a database resulting from a given search',
+	]
+);
 
-my $dsn = "dbi:Pg:dbname=" . $ARGV[0] . ";host=cpt.tamu.edu;port=5432;sslmode=require";
+my $dsn = "dbi:Pg:dbname=" . $options->{database} . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
 my $password = "oNFkI0KyoGygRp8Zf7jOVIrR1VmsOWak";
 my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 
 my $results = $chado->resultset('Sequence::Featureprop')->search(
-	{ value => { like => "%spanin%" } },
+	{ value => { like => $options->{query} } },
 	{ join => ['cvterm', 'feature'] }
 );
 
