@@ -3,6 +3,9 @@ use Data::Format::Pretty::Console qw(format_pretty);
 use strict;
 use warnings;
 
+
+# PODNAME: search.pl
+
 use CPT;
 my $libCPT = CPT->new();
 my $options = $libCPT->getOptions(

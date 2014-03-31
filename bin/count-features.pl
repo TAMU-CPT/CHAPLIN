@@ -2,6 +2,8 @@ use Bio::Chado::Schema;
 use strict;
 use warnings;
 
+# PODNAME: count_features.pl
+
 use CPT;
 my $libCPT = CPT->new();
 my $options = $libCPT->getOptions(

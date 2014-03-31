@@ -3,6 +3,9 @@ use strict;
 use warnings;
 use Data::Format::Pretty::Console qw(format_pretty);
 
+
+# PODNAME: search-by-feature-tag.pl
+
 my $dsn = "dbi:Pg:dbname=" . $ARGV[0] . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
 my $password = "oNFkI0KyoGygRp8Zf7jOVIrR1VmsOWak";

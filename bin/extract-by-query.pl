@@ -4,6 +4,8 @@ use strict;
 use warnings;
 use Bio::Tools::CodonTable;
 
+# PODNAME: extract_by_query.pl
+
 my $codon_table = Bio::Tools::CodonTable->new(-id=>11);
 
 use CPT;

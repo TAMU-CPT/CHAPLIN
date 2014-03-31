@@ -4,6 +4,9 @@ use strict;
 use warnings;
 
 
+# PODNAME: extract-gbk.pl
+
+
 use CPT;
 my $libCPT = CPT->new();
 my $options = $libCPT->getOptions(

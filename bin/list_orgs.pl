@@ -3,6 +3,7 @@ use Bio::Chado::Schema;
 use strict;
 use warnings;
 
+# PODNAME: list_orgs.pl
 
 use CPT;
 my $libCPT = CPT->new();
