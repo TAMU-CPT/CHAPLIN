@@ -109,7 +109,6 @@ while(my $feat = $features->next){
 
 
 # Lookup the cvterms
-use Data::Dumper;
 my @cvterm_list = map { { cvterm_id => $_ } } keys(%cvterms_to_lookup);
 my $cvterms = $chado->resultset('Cv::Cvterm')->search(
 	\@cvterm_list
