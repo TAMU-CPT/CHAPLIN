@@ -49,11 +49,11 @@ my $options = $libCPT->getOptions(
 	'outputs' => [
 		[
 			'results',
-			'Search Results',
+			'Find and Replace Results',
 			{
 				validate       => 'File/Output',
 				required       => 1,
-				default        => 'orgs.csv',
+				default        => 'changes',
 				data_format    => 'text/tabular',
 				default_format => 'CSV'
 			}
@@ -76,17 +76,41 @@ my $results = $chado->resultset('Sequence::Featureprop')->search(
 	{ join => ['cvterm', 'feature'] }
 );
 
+my %response = (
+	'Sheet1' => {
+		header => ['Organism ID', 'Feature Name', 'Tag', 'Value'],
+		data => [],
+	}
+);
+
 my @data;
-push(@data, ['Organism', 'Feature Name', 'Tag', 'Value']);
+push(@data, ['Organism', 'Feature Name', 'Tag', 'Original Value', 'New Value']);
 my @feature_ids;
 my $from = $options->{pcre_regex_from};
 my $to = $options->{pcre_regex_to};
 while(my $row = $results->next){
 	my $val = $row->value;
 	$val =~ s/$from/$to/gmx;
-	print $row->value," -> $val\n";
+	push(@data,
+		[
+			$row->feature->organism_id,
+			$row->feature->name,
+			$row->cvterm->name,
+			$row->value,
+			$val,
+		]
+	);
 	if(! defined $options->{noop}){
 		$row->value($val);
 		$row->update();
 	}
 }
+
+$response{Sheet1}{data} = \@data;
+
+use CPT::OutputFiles;
+my $data_out = CPT::OutputFiles->new(
+	name   => 'results',
+	libCPT => $libCPT,
+);
+$data_out->CRR(data => \%response);

@@ -31,7 +31,7 @@ my $options = $libCPT->getOptions(
 			{
 				validate       => 'File/Output',
 				required       => 1,
-				default        => 'orgs.csv',
+				default        => 'search_results',
 				data_format    => 'text/tabular',
 				default_format => 'CSV'
 			}
@@ -55,10 +55,26 @@ my $results = $chado->resultset('Sequence::Featureprop')->search(
 );
 
 my @data;
-push(@data, ['Organism', 'Feature Name', 'Tag', 'Value']);
+my @headers = ('Organism', 'Feature Name', 'Tag', 'Value');
 my @feature_ids;
 while(my $row = $results->next){
 	push(@data,[$row->feature->organism->common_name, $row->feature->name, $row->cvterm->name, $row->value]);
 }
 
-print format_pretty(\@data);
+if($options->{verbose}){
+	print format_pretty(\@data);
+}
+
+
+my %results = (
+	'Sheet1' => {
+		header => \@headers,
+		data => \@data,
+	}
+);
+use CPT::OutputFiles;
+my $data_out = CPT::OutputFiles->new(
+	name   => 'results',
+	libCPT => $libCPT,
+);
+$data_out->CRR(data => \%results);
