@@ -119,7 +119,10 @@ while(my $term = $cvterms->next){
 }
 
 # Load the qualifier mappings
-open(my $qual_map,'<','qualifier_mapping');
+use File::Spec;
+my $dir = File::ShareDir::dist_dir('CPT-CHAPLIN');
+my $qual_map_loc = File::Spec->catfile($dir,'qualifier_mapping');
+open(my $qual_map,'<',$qual_map_loc);
 my %qual_trans;
 while(<$qual_map>){
 	if($_ !~ /^#/){
