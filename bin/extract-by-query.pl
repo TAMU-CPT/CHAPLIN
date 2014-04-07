@@ -30,7 +30,7 @@ my $options = $libCPT->getOptions(
 			{
 				validate       => 'File/Output',
 				required       => 1,
-				default        => 'query.fa',
+				default        => 'query',
 				data_format    => 'genomic/raw',
 				default_format => 'Fasta'
 			}
@@ -114,7 +114,9 @@ if($options->{verbose}){
 #open(my $output,'>', 'out.fa');
 #print $output join("\n",@fasta_sequences);
 #close($output);
-$libCPT->classyReturnResults(
-	name        => "sequence",
-	data        => join("\n", @fasta_sequences),
+use CPT::OutputFiles;
+my $data_out = CPT::OutputFiles->new(
+	name   => 'sequence',
+	libCPT => $libCPT,
 );
+$data_out->CRR(data => join("\n", @fasta_sequences));

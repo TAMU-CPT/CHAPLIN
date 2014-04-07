@@ -24,7 +24,7 @@ my $options = $libCPT->getOptions(
 			{
 				validate       => 'File/Output',
 				required       => 1,
-				default        => 'feature_counts.csv',
+				default        => 'feature_counts',
 				data_format    => 'text/tabular',
 				default_format => 'CSV'
 			}
@@ -77,8 +77,9 @@ my %crr_data = (
 		data => \@data,
 	}
 );
-$libCPT->classyReturnResults(
-	name        => "results",
-	data        => \%crr_data,
+use CPT::OutputFiles;
+my $data_out = CPT::OutputFiles->new(
+	name   => 'results',
+	libCPT => $libCPT,
 );
-
+$data_out->CRR(data => \%crr_data);

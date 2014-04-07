@@ -35,7 +35,7 @@ my $options = $libCPT->getOptions(
 			{
 				validate       => 'File/Output',
 				required       => 1,
-				default        => 'extracted.gbk',
+				default        => 'extracted',
 				data_format    => 'genomic/annotated',
 				default_format => 'Genbank'
 			}
@@ -119,7 +119,10 @@ while(my $term = $cvterms->next){
 }
 
 # Load the qualifier mappings
-open(my $qual_map,'<','qualifier_mapping');
+use File::Spec;
+my $dir = File::ShareDir::dist_dir('CPT-CHAPLIN');
+my $qual_map_loc = File::Spec->catfile($dir,'qualifier_mapping');
+open(my $qual_map,'<',$qual_map_loc);
 my %qual_trans;
 while(<$qual_map>){
 	if($_ !~ /^#/){
@@ -166,7 +169,9 @@ foreach(@features){
 	$seq_obj->add_SeqFeature($new_feat)
 }
 
-$libCPT->classyReturnResults(
-	name        => "gbk",
-	data        => $seq_obj,
+use CPT::OutputFiles;
+my $data_out = CPT::OutputFiles->new(
+	name   => 'gbk',
+	libCPT => $libCPT,
 );
+$data_out->CRR(data => $seq_obj);
