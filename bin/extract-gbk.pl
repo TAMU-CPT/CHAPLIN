@@ -35,7 +35,7 @@ my $options = $libCPT->getOptions(
 			{
 				validate       => 'File/Output',
 				required       => 1,
-				default        => 'extracted.gbk',
+				default        => 'extracted',
 				data_format    => 'genomic/annotated',
 				default_format => 'Genbank'
 			}
@@ -166,7 +166,9 @@ foreach(@features){
 	$seq_obj->add_SeqFeature($new_feat)
 }
 
-$libCPT->classyReturnResults(
-	name        => "gbk",
-	data        => $seq_obj,
+use CPT::OutputFiles;
+my $data_out = CPT::OutputFiles->new(
+	name   => 'gbk',
+	libCPT => $libCPT,
 );
+$data_out->CRR(data => $seq_obj);
