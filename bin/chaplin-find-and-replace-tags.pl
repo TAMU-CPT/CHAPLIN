@@ -16,7 +16,7 @@ my $options = $libCPT->getOptions(
 		],
 		[
 			'query',
-			'SQL Query String used to select rows for doing replacement on (% is wildcard character)',
+			'SQL Query String used to select rows for doing replacement on (* is wildcard character)',
 			{
 				required => 1,
 				validate => 'String'
@@ -65,6 +65,8 @@ my $options = $libCPT->getOptions(
 		'appdesc' => 'lists features in a database resulting from a given search',
 	]
 );
+
+$options->{query} =~ s/\*/%/g;
 
 my $dsn = "dbi:Pg:dbname=" . $options->{database} . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";

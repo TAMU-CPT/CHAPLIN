@@ -20,7 +20,7 @@ my $options = $libCPT->getOptions(
 				validate => 'String'
 			}
 		],
-		['query','Search string for searching through all tags in the database. Use "%" as a wildcard character, e.g., "%ISP%" will match anything with the characters ISP in it', { required => 1, validate => 'String'}],
+		['query','Search string for searching through all tags in the database. Use "*" as a wildcard character, e.g., "*ISP*" will match anything with the characters ISP in it', { required => 1, validate => 'String'}],
 		['translate','Translate to amino acid sequence (uses t/n table #11)'],
 	],
 	'outputs' => [
@@ -42,6 +42,9 @@ my $options = $libCPT->getOptions(
 		'appdesc' => 'allows exporting a query against chado as fasta.',
 	]
 );
+
+$options->{query} =~ s/\*/%/g;
+
 
 my $dsn = "dbi:Pg:dbname=" . $options->{database} . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
