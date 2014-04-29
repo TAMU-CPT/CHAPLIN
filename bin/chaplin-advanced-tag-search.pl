@@ -16,6 +16,7 @@ my $options = $libCPT->getOptions(
 				validate => 'String'
 			}
 		],
+		[ 'query_mode', 'How is the input query constructed? Is it a regular query with ? and * as wildcards, is it a SQL conformant regex query, is it a proper regex query?', { validate => "Option", options => { 'like' => 'Normal query with wildcards', 'similar' => 'Uses SQL regex', 'regex' => 'Proper Regex'}, default => 'like'}],
 		[
 			'query',
 			'Tag Value to be queried in the database. Information about the feature will be printed if it exists in that organism, or a notice will be printed if it was not found. Use * for wildcard',
@@ -53,7 +54,22 @@ my $password = "oNFkI0KyoGygRp8Zf7jOVIrR1VmsOWak";
 my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 
 my $query = $options->{query};
-$query =~ s/\*/%/g;
+if($options->{mode} eq 'like'){
+	$query =~ s/\*/%/g;
+}
+my %preformatted_query;
+if($options->{query_mode} eq 'like'){
+	$preformatted_query{like} = $query;
+}elsif($options->{query_mode} eq 'similar'){
+	$preformatted_query{similar_to} = $query;
+}elsif($options->{query_mode} eq 'regex'){
+	$preformatted_query{'like'} = \"% AND value ~ $query";
+	#$preformatted_query{'~'} = $query;
+}else{
+	die 'Bad mode specified';
+}
+
+print Dumper \%preformatted_query;
 
 my $results = $chado->resultset('Organism::Organism')->search(undef, { 'order_by' => {'-asc', 'species', '-asc', 'genus', '-asc', 'common_name' } });
 
@@ -128,13 +144,18 @@ foreach my $organism(@havenots){
 }
 $report->list_end();
 
+
+
+
+
+
 # Search within an org.
 sub query_organism {
 	my ($oid) = @_;
 	my $features = $chado->resultset('Sequence::Featureprop')->search(
 		{ 
 			'feature.organism_id' => $oid,
-			value => { like => $query },
+			value => \%preformatted_query,
 		},
 		{ join => ['cvterm', 'feature'] , },
 	);
