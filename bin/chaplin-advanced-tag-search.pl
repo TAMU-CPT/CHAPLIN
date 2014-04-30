@@ -16,13 +16,13 @@ my $options = $libCPT->getOptions(
 				validate => 'String'
 			}
 		],
-		[ 'query_mode', 'How is the input query constructed? Is it a regular query with ? and * as wildcards, is it a SQL conformant regex query, is it a proper regex query?', { validate => "Option", options => { 'like' => 'Normal query with wildcards', 'similar' => 'Uses SQL regex', 'regex' => 'Proper Regex'}, default => 'like'}],
 		[
 			'query',
-			'Tag Value to be queried in the database. Information about the feature will be printed if it exists in that organism, or a notice will be printed if it was not found. Use * for wildcard',
+			'Tag Value to be queried in the database. Information about the feature will be printed if it exists in that organism, or a notice will be printed if it was not found. * is a multiple character wildcard, and ? is a single character.',
 			{
 				required => 1,
-				validate => 'String'
+				validate => 'String',
+				multiple => 1,
 			}
 		],
 	],
@@ -53,23 +53,30 @@ my $user = "charm_admin";
 my $password = "oNFkI0KyoGygRp8Zf7jOVIrR1VmsOWak";
 my $chado = Bio::Chado::Schema->connect( $dsn, $user, $password );
 
-my $query = $options->{query};
-if($options->{mode} eq 'like'){
+my %color_scheme = (
+	"CDS" => {
+		"color" =>  "#1c86ee",
+		"border" =>  1,
+		"plot" =>  1
+	}
+);
+
+my @queries_orig = @{$options->{query}};
+my @queries;
+foreach(@queries_orig){
+	my $query = "$_";
+	# Escape all %s
+	$query =~ s/%/%%/;
+	# Add in our custom %s
 	$query =~ s/\*/%/g;
-}
-my %preformatted_query;
-if($options->{query_mode} eq 'like'){
-	$preformatted_query{like} = $query;
-}elsif($options->{query_mode} eq 'similar'){
-	$preformatted_query{similar_to} = $query;
-}elsif($options->{query_mode} eq 'regex'){
-	$preformatted_query{'like'} = \"% AND value ~ $query";
-	#$preformatted_query{'~'} = $query;
-}else{
-	die 'Bad mode specified';
+
+	# Escape all _s
+	$query =~ s/_/__/;
+	# Add in our custom _s
+	$query =~ s/\?/_/g;
+	push(@queries, $query);
 }
 
-print Dumper \%preformatted_query;
 
 my $results = $chado->resultset('Organism::Organism')->search(undef, { 'order_by' => {'-asc', 'species', '-asc', 'genus', '-asc', 'common_name' } });
 
@@ -108,33 +115,27 @@ my %tn = (
 	strand      => "Strand",
 	timelastmodified => "Last Modified",
 );
-my @tnkeys = qw/start end strand timelastmodified/;
 
 my %cv = load_cvterms();
-$report->h1("Organisms with matching features");
+$report->h1("Organisms with features matching " . join(", ", @queries_orig));
 foreach my $organism(@haves){
 	my %d = %{$organism};
 	$report->h3(sprintf("%s %s", $d{genus},$d{species}));
+	# Map of features
 	my @fp = @{$d{features}};
+	$report->a(generateMapOfFeatures(@fp));
+
+	$report->a('<div class="row">');
 	foreach(@fp){
-		$report->h4("Matching feature");
 		my %fi = %{$_};
 
-		$report->table_header('Key','Value');
-		$report->table_row($tn{primary_tag}, $cv{$fi{primary_tag}});
 
-		foreach(@tnkeys){
-			$report->table_row($tn{$_}, $fi{$_});
-		}
-		foreach(@{$fi{featprops}}){
-			my ($id,$val,$rank) = @{$_};
-			$report->table_row('Tag: ' . $cv{$id}, $val);
-		}
-		$report->finalize_table();
+		$report->a('<div class="col-md-6">');
+		#$report->finalize_table();
+		$report->a("<pre>" . genbankFeatureString(%fi) . "</pre>");
+		$report->a('</div>');
 	}
-
-
-
+	$report->a('</div>');
 }
 $report->h1("Organisms without matching features");
 $report->list_start('bullet');
@@ -144,18 +145,110 @@ foreach my $organism(@havenots){
 }
 $report->list_end();
 
+sub genbankFeatureString{
+	my (%fi) = @_;
+	my $resp;
+	
+	if($fi{strand} == 1){
+		$resp .= sprintf("     CDS             %s..%s\n", $fi{start},
+			$fi{end})
+	}else{
+		$resp .= sprintf("     CDS             complement(%s..%s)\n",
+			$fi{start}, $fi{end})
+	}
+
+	foreach(@{$fi{featprops}}){
+		my ($id,$val,$rank) = @{$_};
+		$resp .= sprintf("                     /%s=\"%s\"\n", $cv{$id}, $val);
+	}
+	return $resp;
+}
 
 
 
+use CPT::Plot::Base;
+use Bio::SeqFeature::Generic;
+sub generateMapOfFeatures {
+	my (@features) = @_;
+	my $min = 1_000_000_000;
+	my $max = 0;
+	foreach(@features){
+		my %f = %{$_};
+		if($f{start} < $min){
+			$min = $f{start}
+		}
+		if($f{start} > $max){
+			$max = $f{start}
+		}
+		if($f{end} < $min){
+			$min = $f{end}
+		}
+		if($f{end} > $max){
+			$max = $f{end}
+		}
+	}
+	$min -= .1 * ($max - $min);
+	$max += .1 * ($max - $min);
+	$min = int($min);
+	$max = int($max);
+
+	my @real_features;
+	foreach(@features){
+		my $feat = Bio::SeqFeature::Generic->new(
+			-start  => ${$_}{start}  , -end         => ${$_}{end} ,
+			-strand => ${$_}{strand} , -primary_tag => 'CDS'
+		);
+		push(@real_features, $feat);
+	}
+
+	if(!defined $min || !defined $max){
+		return 'Could not build SVG';
+	}
+
+	my $svg_control = CPT::Plot::Base->new(
+		'_ft_count' => 0,
+		'_internal_maxrowlength' => 0,
+		'double_line_for_overlap' => 1,
+		'genome_length' => 4000,
+		'ils' => 000,
+		'justified' => 'justify',
+		'label' => undef,
+		'label_callouts' => undef,
+		'label_from' => 'numeric',
+		'label_numbering_count' => 1,
+		'label_numeric_features' => undef,
+		'label_pos' => 'above',
+		'label_query' => undef,
+		'label_shrink_mode' => 'cutoff',
+		'label_text_source' => 'locus_tag',
+		'line_count' => 1,
+		'opacity' => '0.7',
+		'rows' => 1,
+		'separate_strands' => 1,
+		'split_factor' => '1.02',
+		'view' => 'alt_artemis',
+		'x_offset' => 30,
+		'y_offset' => 70,
+		'zoom' => 20,
+		'color_scheme' => \%color_scheme,
+		'features' => \@real_features,
+		'start' => $min,
+		'end' => $max,
+	);
+	$svg_control->init();
+	$svg_control->partitionLines();
+	$svg_control->createSVG();
+	return $svg_control->getSVG->xmlify();
+}
 
 
 # Search within an org.
 sub query_organism {
 	my ($oid) = @_;
 	my $features = $chado->resultset('Sequence::Featureprop')->search(
-		{ 
+		{
 			'feature.organism_id' => $oid,
-			value => \%preformatted_query,
+			value => { -like => \@queries },
 		},
 		{ join => ['cvterm', 'feature'] , },
 	);
@@ -177,7 +270,7 @@ sub feature_info {
 	# Returns 1 feature.
 	my ($fid) = @_;
 	my $feature_info = $chado->resultset('Sequence::Feature')->search(
-		{ 
+		{
 			'feature_id' => $fid,
 		},
 		#{ join => ['featureloc_features'] , },
