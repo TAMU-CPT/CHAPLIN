@@ -229,7 +229,7 @@ sub generateMapOfFeatures {
 		'view' => 'alt_artemis',
 		'x_offset' => 30,
 		'y_offset' => 70,
-		'zoom' => 20,
+		'zoom' => 50,
 		'color_scheme' => \%color_scheme,
 		'features' => \@real_features,
 		'start' => $min,
