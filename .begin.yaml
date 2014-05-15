@@ -1,0 +1,17 @@
+---
+remote: https://geiger.tamu.edu/toolshed/repos/esr/chado_chaplin
+transform:
+   - name: perl scripts
+     glob: "bin/*.pl"
+     command_front: 'perl'
+     command_end: "--generate_galaxy_xml"
+     reformat: "xmllint --pretty 1 -"
+     suffix: 'xml'
+   - name: docs
+     glob: "README.md"
+     command_front: "pandoc -f markdown -t rst "
+     suffix: 'rst'
+copy:
+   - name: copy perl scripts
+     glob: "bin/*.pl"
+     subdir: "bin/"

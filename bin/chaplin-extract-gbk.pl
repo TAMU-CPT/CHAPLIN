@@ -120,7 +120,8 @@ while(my $term = $cvterms->next){
 
 # Load the qualifier mappings
 use File::Spec;
-my $dir = File::ShareDir::dist_dir('CPT-CHAPLIN');
+#my $dir = File::ShareDir::dist_dir('CPT-CHAPLIN');
+my $dir = ".";
 my $qual_map_loc = File::Spec->catfile($dir,'qualifier_mapping');
 open(my $qual_map,'<',$qual_map_loc);
 my %qual_trans;

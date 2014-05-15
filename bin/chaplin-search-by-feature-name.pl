@@ -18,7 +18,7 @@ my $options = $libCPT->getOptions(
 				validate => 'String'
 			}
 		],
-		 ['query','Search string for searching through all tags in the database. Use "%" as a wildcard character, e.g., "%ISP%" will match anything with the characters ISP in it', { required => 1, validate => 'String'}],
+		 ['query','Search string for searching through all tags in the database. Use "*" as a wildcard character, e.g., "*ISP*" will match anything with the characters ISP in it', { required => 1, validate => 'String'}],
 	],
 	'outputs' => [
 		[
@@ -40,6 +40,7 @@ my $options = $libCPT->getOptions(
 	]
 );
 
+$options->{query} =~ s/\*/%/g;
 
 my $dsn = "dbi:Pg:dbname=" . $options->{database} . ";host=cpt.tamu.edu;port=5432;sslmode=require";
 my $user = "charm_admin";
